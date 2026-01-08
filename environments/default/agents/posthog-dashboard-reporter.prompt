@@ -16,7 +16,7 @@ tools:
   - "__insight-query"
   - "__insights-get-all"
   - "__list-errors"
-  - "__organization-details-get"
+  # Excluded: __organization-details-get - empty schema not compatible with OpenAI
   - "__projects-get"
   - "__query-generate-hogql-from-question"
   - "__query-run"
