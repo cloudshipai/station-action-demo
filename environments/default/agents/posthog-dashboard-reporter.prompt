@@ -7,23 +7,20 @@ model: gpt-4o-mini
 max_steps: 15
 
 tools:
-  # Tools that take specific parameters (safe for OpenAI)
-  - "__dashboard-get"              # Takes dashboard_id parameter
-  - "__insight-get"                # Takes insight_id parameter
-  - "__insight-query"              # Takes query parameters
-  - "__experiment-results-get"     # Takes experiment_id parameter
-  - "__query-run"                  # Takes query parameter
-  - "__query-generate-hogql-from-question"  # Takes question parameter
-  
-  # "List all" tools - some may have empty schemas, commenting out to be safe
-  # - "__dashboards-get-all"       # May have empty schema
-  # - "__experiment-get-all"       # May have empty schema  
-  # - "__feature-flag-get-all"     # May have empty schema
-  # - "__insights-get-all"         # May have empty schema
-  # - "__list-errors"              # May have empty schema
-  # - "__projects-get"             # CONFIRMED: empty schema breaks OpenAI
-  # - "__surveys-get-all"          # May have empty schema
-  # - "__organization-details-get" # CONFIRMED: empty schema breaks OpenAI
+  - "__dashboard-get"
+  - "__dashboards-get-all"
+  - "__experiment-get-all"
+  - "__experiment-results-get"
+  - "__feature-flag-get-all"
+  - "__insight-get"
+  - "__insight-query"
+  - "__insights-get-all"
+  - "__list-errors"
+  - "__organization-details-get"
+  - "__projects-get"
+  - "__query-generate-hogql-from-question"
+  - "__query-run"
+  - "__surveys-get-all"
 
 input:
   schema:
