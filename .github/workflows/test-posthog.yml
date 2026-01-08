@@ -1,87 +1,30 @@
-name: Test PostHog Agent
+name: Run Station Agent
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
     inputs:
       task:
         description: 'Task for the agent'
         required: false
-        default: 'List all my dashboards and give me a brief summary of what analytics I have set up.'
+        default: 'List all my dashboards and summarize my analytics setup.'
 
 jobs:
-  test-with-station-action:
-    name: Test with station-action
+  run-agent:
+    name: PostHog Dashboard Reporter
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run PostHog Dashboard Reporter
+      - name: Run Agent
         uses: cloudshipai/station-action@main
         with:
           agent: 'posthog-dashboard-reporter'
-          task: ${{ github.event.inputs.task || 'List all my dashboards and give me a brief summary of what analytics I have set up.' }}
-          environment: 'default'
-          debug: 'true'
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-
-  test-anthropic:
-    name: Test with Anthropic Claude
-    runs-on: ubuntu-latest
-    if: ${{ vars.TEST_ANTHROPIC == 'true' }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Station CLI
-        run: |
-          VERSION=$(curl -sS https://api.github.com/repos/cloudshipai/station/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-          VERSION_NO_V="${VERSION#v}"
-          curl -fsSL "https://github.com/cloudshipai/station/releases/download/${VERSION}/station_${VERSION_NO_V}_linux_amd64.tar.gz" -o /tmp/station.tar.gz
-          tar -xzf /tmp/station.tar.gz -C /tmp
-          chmod +x /tmp/stn
-          sudo mv /tmp/stn /usr/local/bin/stn
-
-      - name: Initialize and Sync
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          STN_AI_PROVIDER: anthropic
-          STN_AI_MODEL: claude-3-5-haiku-20241022
-        run: |
-          stn init --config ./config.yaml --yes
-          stn sync default -i=false
-
-      - name: Run Agent with Claude
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          STN_AI_PROVIDER: anthropic
-          STN_AI_MODEL: claude-3-5-haiku-20241022
-        run: |
-          stn agent run "posthog-dashboard-reporter" \
-            "What feature flags do I have configured?" \
-            --env default \
-            --tail
-
-  test-bundle-id:
-    name: Test with Bundle ID
-    runs-on: ubuntu-latest
-    if: ${{ vars.TEST_BUNDLE_ID != '' }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Agent from CloudShip Bundle
-        uses: cloudshipai/station-action@v1
-        with:
-          agent: 'posthog-dashboard-reporter'
-          task: 'Give me a summary of my PostHog analytics'
-          bundle-id: ${{ vars.TEST_BUNDLE_ID }}
+          task: ${{ github.event.inputs.task || 'List all my dashboards and summarize my analytics setup.' }}
+          bundle-id: '970fa728-4276-4443-9e51-35919b650d7a'
           cloudship-api-key: ${{ secrets.CLOUDSHIP_API_KEY }}
           debug: 'true'
         env:
