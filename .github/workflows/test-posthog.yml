@@ -1,3 +1,12 @@
+# Station AI Agent Workflow with AWS Secrets Backend
+# This workflow demonstrates using AWS Secrets Manager instead of GitHub Secrets
+# for sensitive credentials like API keys.
+#
+# Setup required:
+#   1. AWS IAM OIDC provider for token.actions.githubusercontent.com
+#   2. IAM role with trust policy for this repo
+#   3. Secret in AWS Secrets Manager at "station/demo"
+
 name: Run Station Agent
 
 on:
@@ -15,9 +24,21 @@ jobs:
   run-agent:
     name: PostHog Dashboard Reporter
     runs-on: ubuntu-latest
+    
+    # Required for OIDC authentication with AWS
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
+
+      # Authenticate with AWS using OIDC (no long-lived credentials!)
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
 
       - name: Run Agent
         uses: cloudshipai/station-action@main
@@ -27,6 +48,10 @@ jobs:
           bundle-id: '970fa728-4276-4443-9e51-35919b650d7a'
           cloudship-api-key: ${{ secrets.CLOUDSHIP_API_KEY }}
           debug: 'true'
+          # Fetch OPENAI_API_KEY from AWS Secrets Manager at runtime
+          secrets-backend: 'aws-secretsmanager'
+          secrets-path: 'station/demo'
+          secrets-region: 'us-east-1'
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # OPENAI_API_KEY is fetched from AWS Secrets Manager - not needed here!
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
