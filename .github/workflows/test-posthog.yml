@@ -1,0 +1,73 @@
+name: Test PostHog Agent
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'Task for the agent'
+        required: false
+        default: 'List all my dashboards and give me a brief summary of what analytics I have set up.'
+
+jobs:
+  test-local-environment:
+    name: Test with Local Environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run PostHog Dashboard Reporter
+        uses: cloudshipai/station-action@v1
+        with:
+          agent: 'posthog-dashboard-reporter'
+          task: ${{ github.event.inputs.task || 'List all my dashboards and give me a brief summary of what analytics I have set up.' }}
+          environment: 'default'
+          debug: 'true'
+          timeout: '180'
+          max-steps: '10'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+
+  test-anthropic:
+    name: Test with Anthropic Claude
+    runs-on: ubuntu-latest
+    if: ${{ vars.TEST_ANTHROPIC == 'true' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run PostHog Agent with Claude
+        uses: cloudshipai/station-action@v1
+        with:
+          agent: 'posthog-dashboard-reporter'
+          task: 'What feature flags do I have configured?'
+          environment: 'default'
+          provider: 'anthropic'
+          model: 'claude-3-5-haiku-20241022'
+          debug: 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+
+  test-bundle-id:
+    name: Test with Bundle ID
+    runs-on: ubuntu-latest
+    if: ${{ vars.TEST_BUNDLE_ID != '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Agent from CloudShip Bundle
+        uses: cloudshipai/station-action@v1
+        with:
+          agent: 'posthog-dashboard-reporter'
+          task: 'Give me a summary of my PostHog analytics'
+          bundle-id: ${{ vars.TEST_BUNDLE_ID }}
+          cloudship-api-key: ${{ secrets.CLOUDSHIP_API_KEY }}
+          debug: 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}

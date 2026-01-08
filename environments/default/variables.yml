@@ -1,0 +1,9 @@
+# Station Environment Variables
+# These are templated into MCP server configs at runtime
+#
+# For GitHub Actions: Set these as repository secrets
+# For local development: Export as environment variables
+
+# PostHog API Key (required for posthog MCP server)
+# Get your key from: https://app.posthog.com/project/settings
+POSTHOG_API_KEY: "${POSTHOG_API_KEY}"
