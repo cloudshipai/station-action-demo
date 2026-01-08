@@ -41,7 +41,7 @@ jobs:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
         run: |
           echo "Syncing environment 'default' to load agents..."
-          stn sync default --no-interactive --verbose || {
+          stn sync default -i=false --verbose || {
             echo "Sync failed, showing environment structure:"
             ls -la environments/default/
             ls -la environments/default/agents/ || echo "No agents dir"
@@ -95,7 +95,7 @@ jobs:
           STN_AI_MODEL: claude-3-5-haiku-20241022
         run: |
           stn init --config ./config.yaml --yes
-          stn sync default --no-interactive
+          stn sync default -i=false
 
       - name: Run Agent with Claude
         env:
