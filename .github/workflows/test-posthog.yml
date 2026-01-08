@@ -11,69 +11,23 @@ on:
         default: 'List all my dashboards and give me a brief summary of what analytics I have set up.'
 
 jobs:
-  test-local-environment:
-    name: Test with Local Environment
+  test-with-station-action:
+    name: Test with station-action
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      # Install Station CLI manually to have full control
-      - name: Install Station CLI
-        run: |
-          VERSION=$(curl -sS https://api.github.com/repos/cloudshipai/station/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-          VERSION_NO_V="${VERSION#v}"
-          curl -fsSL "https://github.com/cloudshipai/station/releases/download/${VERSION}/station_${VERSION_NO_V}_linux_amd64.tar.gz" -o /tmp/station.tar.gz
-          tar -xzf /tmp/station.tar.gz -C /tmp
-          chmod +x /tmp/stn
-          sudo mv /tmp/stn /usr/local/bin/stn
-          echo "Installed Station CLI ${VERSION}"
-          stn --version
-
-      - name: Initialize Station
-        run: |
-          stn init --config ./config.yaml --yes
-          echo "Station initialized"
-
-      - name: Sync Environment (load agents and MCP configs)
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-        run: |
-          echo "Syncing environment 'default' to load agents..."
-          echo "Config file location:"
-          ls -la ./config.yaml
-          echo "Database location:"
-          ls -la ./station.db || echo "No station.db found"
-          stn sync default --config ./config.yaml -i=false --verbose || {
-            echo "Sync failed, showing environment structure:"
-            ls -la environments/default/
-            ls -la environments/default/agents/ || echo "No agents dir"
-            cat environments/default/posthog.json || echo "No posthog.json"
-            exit 1
-          }
-          echo "Listing available agents:"
-          stn agent list --config ./config.yaml --env default
-
       - name: Run PostHog Dashboard Reporter
+        uses: cloudshipai/station-action@main
+        with:
+          agent: 'posthog-dashboard-reporter'
+          task: ${{ github.event.inputs.task || 'List all my dashboards and give me a brief summary of what analytics I have set up.' }}
+          environment: 'default'
+          debug: 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-        run: |
-          echo "Running agent: posthog-dashboard-reporter"
-          echo "Task: ${{ github.event.inputs.task || 'List all my dashboards and give me a brief summary of what analytics I have set up.' }}"
-          
-          stn agent run "posthog-dashboard-reporter" \
-            "${{ github.event.inputs.task || 'List all my dashboards and give me a brief summary of what analytics I have set up.' }}" \
-            --config ./config.yaml \
-            --env default \
-            --tail \
-            2>&1 || {
-              echo "Agent run failed"
-              echo "Checking agent exists:"
-              stn agent list --config ./config.yaml --env default
-              exit 1
-            }
 
   test-anthropic:
     name: Test with Anthropic Claude
